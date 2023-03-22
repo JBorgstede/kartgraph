@@ -52,33 +52,63 @@ function App() {
   "55.665", "55.752", "55.584", "55.590", "54.854",
   "56.625", "55.058"];
 
-  let pits = rondes.map((rondetijd,index)=>{return (rondetijd>70)?{"id":index,"label":index,"data":1}:false}).filter(elem => elem)
-  let newRondes = rondes.map((rondetijd,index)=>{return{"id":index,"data":rondetijd}})
+  let pits = rondes.map((rondetijd,index)=>{return (rondetijd>70)?{"x":index+1,"label":index,"y":1}:false}).filter(elem => elem)
+  let newRondes = rondes.map((rondetijd,index)=>{return{"x":index,"y":rondetijd}})
 
-  let stints = pits.map((element,index) => {
-    return newRondes.slice(pits[index-1]?pits[index-1].id:0,element.id)
+  const stints = pits.map((element,index) => {
+    return newRondes.slice(index?pits[index - 1].x:0,element.x)
   });
-  console.log(stints);
+
+  const calcAverage = (stint, lap, lapIndex) => {
+    
+    let time = parseFloat(lap.y);
+    if(lapIndex) {
+      stint.map((prevLap, index)=>(index <= lapIndex)?time += parseFloat(prevLap.y):false )
+    }
+    time = time / (lapIndex+1)
+
+    return time;
+  }
+
+  const averages = stints.map((stint,index) => {
+    console.log(index)
+    return stint.map((lap,lapIndex) => {
+      return {x:lap.x,y:calcAverage(stint,lap,lapIndex)}
+    })
+  })
+  console.log(averages)
   let rondeLabels = rondes.map((rondetijd,index)=>{return index})
+
+  let dataSets = [
+    {
+      label: "Rondetijden",
+      data: rondes
+    },
+    {
+      label: "Pit",
+      data: pits
+    }
+  ];
+  
+  stints.map((stint,index) => {
+    dataSets.push({
+      label: "Stint:"+index,
+      data:stint,
+    })
+  })
+
+  averages.map((stint,index) => {
+    dataSets.push({
+      label: "Avg. Stint:"+index,
+      data:stint,
+    })
+  })
 
   return (
     <div className="App">
       <Line datasetIdKey='id' data={{
         labels: rondeLabels,
-        datasets:[
-          {
-            label: "Rondetijden",
-            data: rondes
-          },
-          {
-            label: "Pit",
-            data: pits
-          },
-          {
-            label: "Stints",
-            data: stints
-          }
-        ]
+        datasets: dataSets
         }}></Line>
     </div>
   );
